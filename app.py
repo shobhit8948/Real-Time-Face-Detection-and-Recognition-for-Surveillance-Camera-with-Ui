@@ -1,15 +1,14 @@
 # this is app.py file
-
 import cv2
-from flask import Flask, Response, render_template, request, jsonify, redirect, url_for
+from flask import Flask, Response, render_template, request, jsonify, redirect, url_for, send_from_directory
 from utils.database import  get_logs_for_person, initialize_database, get_all_persons, get_logs, delete_person_and_logs, delete_log
 from utils.face_recognition import recognize_and_log, align_face
 from utils.camera import start_camera, stop_camera, camera_stream
-app = Flask(__name__)
+from datetime import datetime, timedelta
 
+app = Flask(__name__)
 # Initialize the database
 initialize_database()
-
 # Live feed status
 camera_status = {"active": False}
 
@@ -24,8 +23,6 @@ def dashboard():
 
 @app.route('/dashboard-data')
 def dashboard_data():
-    from datetime import datetime, timedelta
-
     filter = request.args.get("filter", "week")
     now = datetime.now()
     labels = []
@@ -52,15 +49,12 @@ def dashboard_data():
         for quarter, start_month in enumerate(range(1, 13, 3), start=1):
             start_date = now.replace(month=start_month, day=1).strftime("%Y-%m-%d")
             end_month = start_month + 2
-
-            # Calculate the last day of the end month
             if end_month > 12:
                 end_month -= 12
                 end_year = now.year + 1
             else:
                 end_year = now.year
             end_date = (now.replace(year=end_year, month=end_month, day=1) - timedelta(days=1)).strftime("%Y-%m-%d")
-
             labels.append(quarters[quarter - 1])
             registered_counts.append(len(get_all_persons(start_date=start_date, end_date=end_date)))
             visited_counts.append(len(get_logs(start_date=start_date, end_date=end_date)))
@@ -68,9 +62,7 @@ def dashboard_data():
     return jsonify({
         "labels": labels,
         "registered": registered_counts,
-        "visited": visited_counts
-    })
-
+        "visited": visited_counts})
 
 @app.route('/person-management')
 def person_management():
@@ -87,24 +79,17 @@ def delete_person(person_id):
 
 @app.route('/person-details/<int:person_id>')
 def person_details(person_id):
-    filter_date = request.args.get('filter_date')  # Get filter_date from the request
+    filter_date = request.args.get('filter_date')
     person = next((p for p in get_all_persons() if p["id"] == person_id), None)
-
     if not person:
         return "Person not found", 404
-
-    # Fetch logs for the person filtered by date
     if filter_date:
         logs = [
             log for log in get_logs_for_person(person_id)
-            if log["in_time"].startswith(filter_date)
-        ]
+            if log["in_time"].startswith(filter_date)]
     else:
         logs = get_logs_for_person(person_id)
-
     return render_template('person_details.html', person=person, logs=logs)
-
-from datetime import datetime, timedelta
 
 @app.route('/logs-management')
 def logs_management():
@@ -114,19 +99,13 @@ def logs_management():
     logs = get_logs(filter_date)
     return render_template('logs_management.html', logs=logs)
 
-
-import os
-from flask import send_from_directory
-
 @app.route('/captured_faces/<path:filename>')
 def serve_captured_face(filename):
     """Serve files from the captured_faces directory."""
-    # directory = os.path.join(app.root_path, 'captured_faces')  # Adjust path
     return send_from_directory(app.root_path, filename)
 
 @app.route('/delete-log/<int:log_id>', methods=['POST'])
-def delete_log_route(log_id):  # Adjusted function name for clarity
-    """Delete a log entry."""
+def delete_log_route(log_id):  
     delete_log(log_id)  # Calls the database deletion function
     return redirect(url_for('logs_management'))
 
@@ -134,19 +113,16 @@ def delete_log_route(log_id):  # Adjusted function name for clarity
 def live_feed():
     return render_template('live_feed.html', camera_running=camera_stream.running)
 
-
 def generate_frames():
     """Generate processed video frames for streaming."""
     while camera_stream.running:
         frame = camera_stream.get_processed_frame()
         if frame is None:
             continue
-        # Encode the processed frame as JPEG
         _, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
 
 @app.route('/video-feed')
 def video_feed():
@@ -168,27 +144,21 @@ def search_logs():
         person_id = request.form.get('person_id')
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
-
         if person_id:
             all_logs = get_logs_for_person(int(person_id))
             if start_date and end_date:
                 logs = [
                     log for log in all_logs
-                    if start_date <= log["in_time"][:10] <= end_date
-                ]
+                    if start_date <= log["in_time"][:10] <= end_date]
             else:
                 logs = all_logs
         else:
             if start_date and end_date:
                 logs = [
                     log for log in get_logs()
-                    if start_date <= log["timestamp"][:10] <= end_date
-                ]
+                    if start_date <= log["timestamp"][:10] <= end_date]
             else:
                 logs = get_logs()
-
     return render_template('search_logs.html', logs=logs)
-
-
 if __name__ == '__main__':
     app.run(debug=True)
