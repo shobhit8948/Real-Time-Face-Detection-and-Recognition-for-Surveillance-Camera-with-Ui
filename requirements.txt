@@ -1,0 +1,6 @@
+Flask
+opencv-python
+numpy
+sqlite3
+keras-facenet
+dlib

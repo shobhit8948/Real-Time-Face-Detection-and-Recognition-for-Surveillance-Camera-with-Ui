@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Live Feed</h2>
+<div class="video-container">
+    <img src="{{ url_for('video_feed') }}" alt="Live Feed" style="width: 100%; max-width: 600px;">
+</div>
+<div class="mt-3">
+    <form action="/toggle-feed" method="POST">
+        <button type="submit" class="btn btn-primary">
+            {{ 'Stop Feed' if camera_running else 'Start Feed' }}
+        </button>
+    </form>
+</div>
+{% endblock %}

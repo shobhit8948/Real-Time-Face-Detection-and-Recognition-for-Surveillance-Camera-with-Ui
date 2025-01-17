@@ -1,0 +1,117 @@
+<!-- this is dashboard.html page -->
+{% extends 'base.html' %}
+{% block content %}
+<h3>Dashboard Overview</h3>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5>Total Registered Persons</h5>
+                <p class="display-6">{{ stats.total_persons }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5>Total Logs</h5>
+                <p class="display-6">{{ stats.total_logs }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5>Average Detection Accuracy</h5>
+                <p class="display-6">{{ stats.average_accuracy }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dropdown for selecting the filter -->
+<div class="mb-3">
+    <label for="data-filter" class="form-label">Filter Data By:</label>
+    <select id="data-filter" class="form-select">
+        <option value="week" selected>Last 7 Days</option>
+        <option value="month">Last 4 Weeks</option>
+        <option value="year">Year (Quarters)</option>
+    </select>
+</div>
+
+<!-- Chart container -->
+<canvas id="dashboardChart"></canvas>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<script>
+    const ctx = document.getElementById('dashboardChart').getContext('2d');
+    let dashboardChart;
+
+    // Function to update the chart data
+    function updateChart(filter) {
+        fetch(`/dashboard-data?filter=${filter}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update chart data
+                if (dashboardChart) {
+                    dashboardChart.destroy();
+                }
+
+                dashboardChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Registered Persons',
+                                data: data.registered,
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                            },
+                            {
+                                label: 'Visited Persons',
+                                data: data.visited,
+                                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                                borderColor: 'rgba(153, 102, 255, 1)',
+                                borderWidth: 1,
+                            }
+                        ]
+                    },
+                    options: {
+                        plugins: {
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                formatter: (value) => value, // Show the value as text
+                                color: '#000',
+                                font: {
+                                    weight: 'bold',
+                                },
+                            }
+                        },
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                            },
+                        },
+                    },
+                    plugins: [ChartDataLabels], // Activate the plugin
+                });
+            })
+            .catch(error => console.error('Error fetching chart data:', error));
+    }
+
+    // Initialize the chart with the default filter
+    updateChart('week');
+
+    // Update the chart when the filter is changed
+    document.getElementById('data-filter').addEventListener('change', function () {
+        updateChart(this.value);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+<!-- this is logs_management.html file -->
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="d-flex justify-content-between align-items-center">
+    Logs Management
+    <form method="GET" action="{{ url_for('logs_management') }}" class="d-inline">
+        <input type="date" id="filter-date" name="filter_date" 
+               class="form-control form-control-sm d-inline-block" 
+               style="width: auto;" 
+               value="{{ request.args.get('filter_date', '') }}">
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-left: 5px;">Filter</button>
+    </form>
+</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Serial No</th>
+            <th>Log ID</th>
+            <th>Person ID</th>
+            <th>Timestamp</th>
+            <th>Captured Face</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ log.id }}</td>
+            <td>{{ log.person_id }}</td>
+            <td>{{ log.timestamp }}</td>
+            <td>
+                <img src="{{ log.captured_face }}" alt="Captured Face" style="width: 100px; height: auto;">
+            </td>
+            <td>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <form action="{{ url_for('delete_log_route', log_id=log.id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger w-100">Delete</button>
+                    </form>
+                    <form action="{{ url_for('person_details', person_id=log.person_id) }}" method="GET">
+                        <button type="submit" class="btn btn-info w-100">View Details</button>
+                    </form>
+                    
+                    
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

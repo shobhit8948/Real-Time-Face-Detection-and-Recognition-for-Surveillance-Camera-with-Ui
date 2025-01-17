@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="d-flex justify-content-between align-items-center">
+    Person Details - ID: {{ person.id }}
+    <form method="GET" action="{{ url_for('person_details', person_id=person.id) }}" class="d-flex align-items-center mb-3">
+        <input type="date" id="filter-date" name="filter_date" 
+               class="form-control form-control-sm" 
+               style="width: auto;" 
+               value="{{ request.args.get('filter_date', '') }}">
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-left: 5px;">Filter</button>
+    </form>
+</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Serial No</th>
+            <th>Logs ID</th>
+            <th>Timestamp</th>
+            <th>Captured Face</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ log.serial_no }}</td>
+            <td>{{ log.in_time }}</td>
+            <td>
+                {% if log.captured_face %}
+                <img src="{{ log.captured_face }}" alt="Captured Face" style="width: 100px; height: 100px;">
+                {% else %}
+                No Image
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

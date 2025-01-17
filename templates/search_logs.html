@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Search Logs</h2>
+    <form method="POST" action="/search-logs" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label for="person_id" class="form-label">Person ID</label>
+            <input type="text" class="form-control" id="person_id" name="person_id" placeholder="Enter Person ID">
+        </div>
+        <div class="col-md-3">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="start_date" name="start_date">
+        </div>
+        <div class="col-md-3">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="end_date" name="end_date">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+    </form>
+
+    {% if logs %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Serial No</th>
+                <th>Log ID</th>
+                <th>Timestamp</th>
+                <th>Captured Face</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ log.serial_no }}</td>
+                <td>{{ log.in_time }}</td>
+                <td>
+                    <img src="{{ log.captured_face }}" alt="Captured Face" class="img-thumbnail" style="width: 100px; height: 100px;">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No logs found for the specified criteria.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
